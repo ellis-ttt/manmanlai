@@ -8,3 +8,4 @@ axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower-http = { version = "0.6", features = ["cors"] }
 reqwest = "0.12"
+dotenv = "0.15.0"

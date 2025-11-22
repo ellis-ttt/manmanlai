@@ -1,4 +1,4 @@
-(_ => {
+(async _ => {
 	if (
 		!/https?:\/\/manmanlai-online\.ru\/user\/control\/user\/update\/id\/\d+/
 			.test(window?.location?.href ?? ``)
@@ -6,51 +6,101 @@
 		return
 	}
 
-	makeButton()
-
-	function handleErr(err) {
-		alert(`Ошибка в виджете Talk-Me:\n${err}`)
-		throw (err)
-	}
-
-	function getUrl(clientQuery) {
-		return fetch(
-			`http://127.0.0.1:8080/?url=${
-				encodeURIComponent(
-					`https://lcab.talk-me.ru/json/v1.0/chat/client/search`
-				)
-			}`,
-			{
-				method: 'POST',
-				headers: {
-					'X-Token': `o6i6bj2tr9l6fbbb2njppu2mhnbsjwiun4vizlbk5pt17hod5dopdbdfv6malioc`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(clientQuery)
-			}
+	addButton(
+		await getTalkMeUrl(
+			makeUserQuery()
 		)
-			.then(response => {
-				console.log(response)
-				return response.json()
-			})
-			.then(
-				data => {
-					console.log(data)
-					return data
-						?.result
-						?.clients
-						?.find(
-							client =>
-								client
-									?.[`applicationLink`] != null
-						)
-						?.[`applicationLink`]
+	)
+
+	async function getTalkMeUrl(userQuery) {
+		if (userQuery == null) {
+			return null
+		}
+
+		try {
+			let res
+			res = await fetch(
+				`https://193.124.114.5:8080/?mars=${atob(`d2VhcmVnb2luZ3RvbWFycw==`)}&url=${
+					encodeURIComponent(
+						`https://lcab.talk-me.ru/json/v1.0/chat/client/search`
+					)
+				}`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(userQuery)
 				}
 			)
-			.catch(handleErr)
+			res = await res.json()
+			return res
+				?.[`result`]
+				?.clients
+				?.find(
+					client =>
+						client
+							?.[`applicationLink`] != null
+				)
+				?.[`applicationLink`]
+		} catch (err) {
+			console.error("Ошибка при получении запроса от Talk-Me:")
+			console.error(err)
+			return null
+		}
 	}
 
-	function makeQuery() {
+	function addButton(url) {
+		let block = document.querySelector(".user-info")
+		if (block == null) {
+			console.error("Не удалось найти блок с информацией о пользователе.")
+			return
+		}
+
+		let button = document.createElement(`button`)
+		button.classList.add(`talk-me-button`)
+
+		let logo = document.createElement(`img`)
+		logo.src = `https://fs.getcourse.ru/fileservice/file/download/a/555832/sc/314/h/ae9e28977fba3a2e8944e952b68acf4e.png`
+		logo.classList.add(`talk-me-logo`)
+
+
+		let label = document.createElement(`span`)
+		label.textContent = `Открыть чат в Talk-Me`
+		label.classList.add(`talk-me-label`)
+
+		button.appendChild(logo)
+		button.appendChild(label)
+
+		if (url == null) {
+			[button, logo, label].forEach(el => el.classList.add(`talk-me-disabled`))
+			return
+		}
+
+		let loadingSpinner = document.createElement(`div`)
+		loadingSpinner.classList.add(`talk-me-loading-spinner`)
+
+		button.addEventListener(
+			`click`,
+			_ => {
+				button.removeChild(logo)
+				button.removeChild(label)
+				button.appendChild(loadingSpinner)
+				window.open(url)
+
+				setTimeout(
+					_ => {
+						button.appendChild(logo)
+						button.appendChild(label)
+						button.removeChild(loadingSpinner)
+					},
+					10000
+				)
+			}
+		)
+	}
+
+	function makeUserQuery() {
 		let phone = document
 			.querySelector('[name="User[phone]"]')
 			?.value
@@ -74,72 +124,7 @@
 			return {email}
 		}
 
-		throw ("Can't find phone or email")
+		console.error("Не удалось найти почту или номер телефона.")
 	}
-
-	function makeButton() {
-		let block = document.querySelector(".user-info")
-		if (block == null) {
-			console.warn("Block not found")
-			return
-		}
-
-		let talkMeButton = document.createElement('div')
-		talkMeButton.style.backgroundColor = `lightseagreen`
-		talkMeButton.style.borderRadius = `24px`
-		talkMeButton.style.width = `100%`
-		talkMeButton.style.height = `60px`
-		talkMeButton.style.display = `flex`
-		talkMeButton.style.gap = `16px`
-		talkMeButton.style.justifyContent = `center`
-		talkMeButton.style.justifyItems = `center`
-		talkMeButton.style.alignItems = `center`
-		talkMeButton.style.cursor = 'pointer'
-
-		talkMeButton.addEventListener(
-			`click`,
-			_ =>
-				getUrl(
-					makeQuery()
-				)
-					.then(
-						url => window.open(url)
-					)
-					.catch(handleErr)
-		)
-		talkMeButton.addEventListener(
-			`mouseenter`,
-			_ =>
-				talkMeButton
-					.style
-					.backgroundColor = `black`
-		)
-
-		talkMeButton.addEventListener(
-			`mouseleave`,
-			_ =>
-				talkMeButton
-					.style
-					.backgroundColor = `lightseagreen`
-		)
-
-		let label = document.createElement('p')
-		label.style.color = `black`
-		label.style.padding = `4px`
-		talkMeButton.style.borderRadius = `8px`
-		label.style.backgroundColor = `gold`
-		label.textContent = "Открыть в Talk-Me"
-
-		let logo = document.createElement('img')
-		logo.src = `https://fs.getcourse.ru/fileservice/file/download/a/555832/sc/314/h/ae9e28977fba3a2e8944e952b68acf4e.png`
-		logo.style[`width`] = `40px`
-		logo.style[`height`] = `40px`
-
-		talkMeButton.append(logo)
-		talkMeButton.append(label)
-
-
-		block.append(talkMeButton)
-	}
-
 })()
+
