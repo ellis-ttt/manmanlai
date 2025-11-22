@@ -6,44 +6,19 @@
 		return
 	}
 
-	function waitForElement(selector) {
-		return new Promise(resolve => {
-			if (document.querySelector(selector)) {
-				return resolve(document.querySelector(selector));
-			}
 
-			const observer = new MutationObserver(mutations => {
-				if (document.querySelector(selector)) {
-					observer.disconnect();
-					resolve(document.querySelector(selector));
-				}
-			});
-
-			observer.observe(document.body, {
-				childList: true,
-				subtree: true
-			});
-		});
-	}
-
-	waitForElement('.user-info')
-		.then(
-			_ => {
-				getTalkMeUrl(
-					makeUserQuery()
-				).then(addButton)
-			}
-		)
-
-	async function getTalkMeUrl(userQuery) {
+	const getTalkMeUrl = async (userQuery) => {
 		if (userQuery == null) {
 			return null
 		}
 
+		const url = "https://193.124.114.5"
+		const port = "8080"
+
 		try {
 			let res
 			res = await fetch(
-				`https://193.124.114.5:8080/?mars=${atob(`d2VhcmVnb2luZ3RvbWFycw==`)}&url=${
+				`${url}:${port}/?mars=${atob(`d2VhcmVnb2luZ3RvbWFycw==`)}&url=${
 					encodeURIComponent(
 						`https://lcab.talk-me.ru/json/v1.0/chat/client/search`
 					)
@@ -148,6 +123,14 @@
 		}
 
 		console.error("Не удалось найти почту или номер телефона.")
+		return null
 	}
+
+	setTimeout(_ => {
+		console.log("talk-me init")
+		getTalkMeUrl(
+			makeUserQuery()
+		).then(addButton)
+	}, 3000)
 })()
 
