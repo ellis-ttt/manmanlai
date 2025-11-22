@@ -38,11 +38,13 @@ async fn main() {
 				.allow_headers(CorsAny),
 		);
 
-	let listener = tokio::net::TcpListener::bind("0.0.0.0:8080")
+	const PORT: &str = "3000";
+
+	let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{PORT}"))
 		.await
 		.unwrap();
 
-	println!("Proxy server running on 0.0.0.0:8080");
+	println!("Proxy server running on 0.0.0.0:{PORT}");
 	axum::serve(
 		listener, app,
 	)

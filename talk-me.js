@@ -12,7 +12,7 @@
 			return null
 		}
 
-		const url = "https://193.124.114.5"
+		const url = "http://193.124.114.5"
 		const port = "8080"
 
 		try {
